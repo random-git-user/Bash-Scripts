@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#A script to log the swap and memory usage of linux processes namely - mongodb
+
+pro1=mongod
+
+app_PID=$(ps -ef | grep $pro1 | grep -v grep | awk '{print $2}')
+app_Res=$(top -n 1 -p $app_PID -b | tail -1 | awk -v app="$app_PID" 'app{print $6}')
+app_Mem=$(top -n 1 -p $app_PID -b | tail -1 | awk -v app="$app_PID" 'app{print $10}')
+app_Comm=$(top -n 1 -p $app_PID -b | tail -1 | awk -v app="$app_PID" 'app{print $12}')
+
+LOG_FILE=/var/log/test.log
+
+#memory---------------------------------------------------------------------------------
+
+#mem =$(free -m | awk 'NR==2{printf "Mem: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }')
+mem=$(free -m | awk 'NR==2{printf $3}')
+
+#swap------------------------------------------------------------------------------------
+
+#swp =$(free -m | tail -1 | awk '{printf "Swap: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }')
+swp=$(free -m | tail -1 | awk '{printf $3}')
+
+#print to log file------------------------------------------------------------------------
+
+printf "$(date) \tMem: $mem \tSwap: $swp \tA-Res: $app_Res \tA-Mem: $app_Mem \n" >> $LOG_FILE
+
+#mail when memory is low------------------------------------------------------------------
+free=`free -mt | grep Total | awk '{print $4}'`
+if [ $free -lt 2048 || $app_Mem -gt 75 ]; then
+#ps -eo %mem,pid,user,args >> /var/log/usage.log
+   echo "Warning from $(hostname), free memory on $(date) is '$free' mb" | mail -s "Memory Alert" -a /var/log/usage.log -a /var/log/test.log your_mail_id@server.com
+fi
