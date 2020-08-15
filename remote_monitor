@@ -1,0 +1,72 @@
+#! /bin/bash
+# unset any variable which system may be using
+
+unset  os architecture kernelrelease internalip externalip nameserver loadaverage
+
+if [[ $# -eq 0 ]]
+then
+{
+# Define Variable tecreset
+
+# Check if connected to Internet or not
+ping -c 1 google.com &> /dev/null && echo "Internet: Connected" || echo "Internet: Disconnected"
+
+# Check OS Type
+os=$(uname -o)
+echo -e "\nOperating System Type :"  $os
+
+# Check OS Release Version and Name
+cat /etc/os-release | grep 'NAME\|VERSION' | grep -v 'VERSION_ID' | grep -v 'PRETTY_NAME' > /tmp/osrelease
+echo "OS Name :"  && cat /tmp/osrelease | grep -v "VERSION" | cut -f2 -d\"
+echo "OS Version :"  && cat /tmp/osrelease | grep -v "NAME" | cut -f2 -d\"
+
+# Check Architecture
+architecture=$(uname -m)
+echo -e "\nArchitecture :" $architecture
+
+# Check Kernel Release
+kernelrelease=$(uname -r)
+echo -e "\nKernel Release :" $kernelrelease
+
+# Check hostname
+echo -e "\nHostname :" $HOSTNAME
+
+# Check Internal IP
+internalip=$(hostname -I)
+echo -e "\nInternal IP :" $internalip
+
+# Check External IP
+externalip=$(curl -s ipecho.net/plain;echo)
+echo -e "\nExternal IP : "$externalip
+
+# Check Logged In Users
+who>/tmp/who
+echo -e "\nLogged In users :"  && cat /tmp/who 
+
+# Check RAM and SWAP Usages
+free -h | grep -v + > /tmp/ramcache
+echo -e "\nRam Usages :"
+cat /tmp/ramcache | grep -v "Swap"
+echo -e "\nSwap Usages :" 
+cat /tmp/ramcache | grep -v "Mem"
+
+# Check Disk Usages
+HDDuse=$(df -h| grep 'Filesystem\|/dev/sda*')
+echo -e "\nDisk Usages : " $HDDuse
+cat /tmp/diskusage
+
+# Check Load Average
+loadaverage=$(top -n 1 -b | grep "load average:" | awk '{print $10 $11 $12}')
+echo -e "\nLoad Average :"  $loadaverage
+
+# Check System Uptime
+awiuptime=$(uptime | awk '{print $3,$4}' | cut -f1 -d,)
+echo -e "\nSystem Uptime Days/(HH:MM) :" $awiuptime
+
+# Unset Variables
+unset  os architecture kernelrelease internalip externalip nameserver loadaverage
+
+# Remove Temporary Files
+}
+fi
+shift $(($OPTIND -1))

@@ -1,0 +1,14 @@
+#!/bin/sh
+date
+p_name='/process'
+PID=$(ps ax |grep -v grep | grep $p_name | awk '{print $1}')
+#if (( $(ps -ef | grep -v grep | grep $service | wc -l) > 0 ))
+if ps ax |grep -v grep | grep $SERVICE > /dev/null
+then
+  echo "$SERVICE is running with PID $PID !!!"
+else
+  echo "$SERVICE is not running on $(hostname), kindly restart application(s). " | mail -s "Server Alert" -a /var/log/test.log mail@server.com
+
+any_other_script
+
+fi
